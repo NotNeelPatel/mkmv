@@ -1,6 +1,7 @@
 import sys
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
+from PyQt6.QtCore import Qt, QSize, QTimer
 from video_maker import make_video
 import os
 
@@ -15,21 +16,41 @@ class MainWindow(QMainWindow):
         self.resize(800, 600)
         self.setAcceptDrops(True)
         self.setWindowTitle("mkmv")
+
         layout = QVBoxLayout()
 
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
 
-        self.logoLabel = QLabel("mkmv")
-        layout.addWidget(self.logoLabel)
+        #self.logoLabel = QLabel("mkmv")
+        #layout.addWidget(self.logoLabel)
+        toolbar = QToolBar("My main toolbar")
+        self.addToolBar(toolbar)
+
+        button_action = QAction("Your button", self)
+        button_action.setStatusTip("This is your button")
+        #button_action.triggered.connect(self.onMyToolBarButtonClick)
+        toolbar.addAction(button_action)
+
+        self.errorLabel = QLabel("Error")
+        self.errorLabel.setProperty("class","error-label")
+        self.errorLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.errorLabel.setVisible(False)
+        self.errorLabel.setFixedHeight(40);
+        layout.addWidget(self.errorLabel)
 
         self.inputFileLabel = QLabel("Drag and drop files here:")
+        self.inputFileLabel.setProperty("class","drop-label")
+        self.inputFileLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.inputFileLabel)
 
         makeVideoButton = QPushButton("make video")
+        makeVideoButton.setProperty("class", "make-video-button")
         makeVideoButton.clicked.connect(self.button_clicked)
         layout.addWidget(makeVideoButton)
+
+        layout.setSpacing(20)
 
         self.files = ["", ""]
 
@@ -51,8 +72,9 @@ class MainWindow(QMainWindow):
             formatted = "/" + formatted
         
         if not os.path.exists(formatted):
-            print("Error: File not Found:", formatted)
+            self.show_error("Error: File not Found:" + formatted)
             return None
+
         print(formatted)
         return formatted
     
@@ -88,7 +110,7 @@ class MainWindow(QMainWindow):
             else:
                 "FAIL input file none"
 
-            self.inputFileLabel.setText("Inputted Files"+ "".join(self.files))
+            self.inputFileLabel.setText("Inputted Files:\n"+ "\n".join(self.files))
             count += 1
 
     def button_clicked(self):
@@ -116,13 +138,52 @@ class MainWindow(QMainWindow):
     def mk_video(self):
         if(self.files[0] != "" and self.files[1] != ""):
             # TODO: Change the h264 codec later for prod
+            self.inputFileLabel.setText("Drag and drop files here:")
             make_video(self.files, "output.mp4", "h264_nvenc")
             self.files = ["", ""]
         else:
-            print("need to input an image and an audio")
+            self.show_error("Error: Add one valid image/gif and one valid audio file")
+            
         #print(self.files)
 
+    def show_error(self, message):
+        self.errorLabel.setText(message)
+        self.errorLabel.setVisible(True)
+        QTimer.singleShot(5000, self.hide_error)
+
+    def hide_error(self):
+        self.errorLabel.setVisible(False)
+
 app = QApplication(sys.argv)
+app.setStyleSheet("""
+    QWidget {
+        background-color: #242424;
+        color: white;
+    }
+
+    .error-label{
+        border-radius: 5px;
+        background-color: #f23e30;
+        color: white;
+        margin: 0 20px 0 20px;
+    }
+
+    .drop-label{
+        border: 2px dashed white; 
+        border-radius: 15px;
+        padding: 0px;
+        margin: 10px 200px 0 200px;
+        text-align: center;
+    }
+
+    .make-video-button{
+        border: 2px solid white; 
+        border-radius: 15px;
+        padding: 20px 0 20px 0;
+        margin: 0 200px 20px 200px;
+    }
+
+""")
 
 window = MainWindow()
 window.show()
