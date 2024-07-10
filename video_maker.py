@@ -13,7 +13,7 @@ def video_with_image(input_files, output_video, codec):
         acodec='aac',
         audio_bitrate='192k',
         shortest=None,
-    ).run()
+    ).run(overwrite_output=True)
 
 def video_with_gif(input_files, output_video, codec):
     ffmpeg.input(input_files[0], stream_loop=-1).output(
@@ -23,7 +23,7 @@ def video_with_gif(input_files, output_video, codec):
         acodec='aac',
         audio_bitrate='192k',
         shortest=None,
-    ).run()
+    ).run(overwrite_output=True)
 
 def make_video(input_files, output_video, codec = "libx264"):
     """
